@@ -4,7 +4,7 @@ from tkinter import messagebox, ttk
 from datetime import datetime
 import random
 
-# Функция для подключения к SQLite
+
 def connect_to_sqlite():
     try:
         conn = sqlite3.connect('cinema_tickets.db')
@@ -13,12 +13,10 @@ def connect_to_sqlite():
         messagebox.showerror("Ошибка подключения", f"Не удалось подключиться к SQLite: {e}")
         return None
 
-# Создание таблиц (если они не существуют)
 def create_tables():
     conn = connect_to_sqlite()
     if conn:
         cursor = conn.cursor()
-        # Таблица фильмов
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS movies (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -27,7 +25,6 @@ def create_tables():
                 genre TEXT NOT NULL
             )
         ''')
-        # Таблица сеансов
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS sessions (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -36,7 +33,6 @@ def create_tables():
                 FOREIGN KEY (movie_id) REFERENCES movies(id)
             )
         ''')
-        # Таблица билетов
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS tickets (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -51,12 +47,10 @@ def create_tables():
         conn.commit()
         conn.close()
 
-# Добавление тестовых данных
 def add_sample_data():
     conn = connect_to_sqlite()
     if conn:
         cursor = conn.cursor()
-        # Проверяем, есть ли уже данные в таблице movies
         cursor.execute("SELECT COUNT(*) FROM movies")
         if cursor.fetchone()[0] == 0:
             # Добавляем фильмы
@@ -68,7 +62,6 @@ def add_sample_data():
                 ("Матрица", "2h 16m", "Фантастика")
             ]
             cursor.executemany("INSERT INTO movies (title, duration, genre) VALUES (?, ?, ?)", movies)
-            # Добавляем сеансы
             cursor.execute("SELECT id FROM movies WHERE title='Криминальное чтиво'")
             movie_id = cursor.fetchone()[0]
             sessions = [
@@ -76,7 +69,6 @@ def add_sample_data():
                 (movie_id, "2023-10-25 21:00")
             ]
             cursor.executemany("INSERT INTO sessions (movie_id, show_time) VALUES (?, ?)", sessions)
-            # Добавляем сеансы для других фильмов
             cursor.execute("SELECT id FROM movies WHERE title='Крестный отец'")
             movie_id = cursor.fetchone()[0]
             sessions = [
@@ -94,22 +86,18 @@ def add_sample_data():
             conn.commit()
         conn.close()
 
-# Загрузка фильмов и сеансов
 def load_movies_and_sessions():
     conn = connect_to_sqlite()
     if conn:
         cursor = conn.cursor()
-        # Загрузка фильмов
         cursor.execute("SELECT * FROM movies")
         movies = cursor.fetchall()
-        # Загрузка сеансов
         cursor.execute("SELECT s.id, m.title, s.show_time FROM sessions s JOIN movies m ON s.movie_id = m.id")
         sessions = cursor.fetchall()
         conn.close()
         return movies, sessions
     return [], []
 
-# Просмотр списка фильмов
 def view_movies():
     movies, _ = load_movies_and_sessions()
     for row in tree_movies.get_children():
@@ -117,7 +105,6 @@ def view_movies():
     for movie in movies:
         tree_movies.insert("", END, values=movie)
 
-# Просмотр расписания сеансов
 def view_sessions():
     _, sessions = load_movies_and_sessions()
     for row in tree_sessions.get_children():
@@ -125,14 +112,13 @@ def view_sessions():
     for session in sessions:
         tree_sessions.insert("", END, values=session)
 
-# Бронирование билета
 def book_ticket():
     session_id = entry_session_id.get()
     seat_number = entry_seat.get()
     customer_name = entry_customer.get()
 
     if session_id and seat_number and customer_name:
-        order_number = f"ORDER-{random.randint(1000, 9999)}"  # Генерация номера заказа
+        order_number = f"ORDER-{random.randint(1000, 9999)}"  
         conn = connect_to_sqlite()
         if conn:
             cursor = conn.cursor()
@@ -146,7 +132,6 @@ def book_ticket():
     else:
         messagebox.showwarning("Ошибка", "Все поля должны быть заполнены!")
 
-# Отмена бронирования
 def cancel_booking():
     selected_item = tree_tickets.selection()
     if selected_item:
@@ -162,7 +147,6 @@ def cancel_booking():
     else:
         messagebox.showwarning("Ошибка", "Выберите билет для отмены!")
 
-# Просмотр истории бронирований
 def view_tickets():
     for row in tree_tickets.get_children():
         tree_tickets.delete(row)
@@ -175,35 +159,30 @@ def view_tickets():
             tree_tickets.insert("", END, values=row)
         conn.close()
 
-# Очистка полей ввода
 def clear_entries():
     entry_session_id.delete(0, END)
     entry_seat.delete(0, END)
     entry_customer.delete(0, END)
 
-# Окно авторизации
 def login():
     username = entry_username.get()
     password = entry_password.get()
 
     if username == "admin" and password == "1":
-        login_window.destroy()  # Закрываем окно авторизации
-        main_window.deiconify()  # Открываем основное окно
+        login_window.destroy() 
+        main_window.deiconify() 
     else:
         messagebox.showerror("Ошибка", "Неверный логин или пароль!")
 
-# Основное окно программы
 main_window = Tk()
 main_window.title("Система автоматизации обработки билетов онлайн-кинотеатра")
 main_window.geometry("1200x800")
-main_window.configure(bg="#E1F5FE")  # Светло-синий фон
-main_window.withdraw()  # Скрываем основное окно до авторизации
+main_window.configure(bg="#E1F5FE")
+main_window.withdraw()  
 
-# Вкладки для фильмов, сеансов и билетов
 notebook = ttk.Notebook(main_window)
 notebook.pack(fill=BOTH, expand=True)
 
-# Вкладка "Фильмы"
 frame_movies = Frame(notebook, bg="#E1F5FE")
 notebook.add(frame_movies, text="Фильмы")
 
@@ -216,7 +195,6 @@ tree_movies.pack(fill=BOTH, expand=True, padx=10, pady=10)
 
 Button(frame_movies, text="Обновить список фильмов", command=view_movies, bg="#005BB5", fg="white", font=("Arial", 12)).pack(pady=10)
 
-# Вкладка "Сеансы"
 frame_sessions = Frame(notebook, bg="#E1F5FE")
 notebook.add(frame_sessions, text="Сеансы")
 
@@ -228,7 +206,6 @@ tree_sessions.pack(fill=BOTH, expand=True, padx=10, pady=10)
 
 Button(frame_sessions, text="Обновить расписание", command=view_sessions, bg="#005BB5", fg="white", font=("Arial", 12)).pack(pady=10)
 
-# Вкладка "Бронирование"
 frame_booking = Frame(notebook, bg="#E1F5FE")
 notebook.add(frame_booking, text="Бронирование")
 
@@ -247,7 +224,6 @@ entry_customer.grid(row=2, column=1, padx=10, pady=10)
 Button(frame_booking, text="Забронировать билет", command=book_ticket, bg="#005BB5", fg="white", font=("Arial", 12)).grid(row=3, column=0, padx=10, pady=10)
 Button(frame_booking, text="Отменить бронирование", command=cancel_booking, bg="#005BB5", fg="white", font=("Arial", 12)).grid(row=3, column=1, padx=10, pady=10)
 
-# Вкладка "История бронирований"
 frame_history = Frame(notebook, bg="#E1F5FE")
 notebook.add(frame_history, text="История бронирований")
 
@@ -263,18 +239,18 @@ tree_tickets.pack(fill=BOTH, expand=True, padx=10, pady=10)
 
 Button(frame_history, text="Обновить историю", command=view_tickets, bg="#005BB5", fg="white", font=("Arial", 12)).pack(pady=10)
 
-# Инициализация базы данных и загрузка данных
+
 create_tables()
-add_sample_data()  # Добавляем тестовые данные
+add_sample_data() 
 view_movies()
 view_sessions()
 view_tickets()
 
-# Окно авторизации
+
 login_window = Tk()
 login_window.title("Авторизация")
 login_window.geometry("300x200")
-login_window.configure(bg="#0078D7")  # Синий фон
+login_window.configure(bg="#0078D7")
 
 Label(login_window, text="Логин:", bg="#0078D7", fg="white", font=("Arial", 12)).pack(pady=10)
 entry_username = Entry(login_window, font=("Arial", 12))
@@ -286,5 +262,4 @@ entry_password.pack(pady=5)
 
 Button(login_window, text="Войти", command=login, bg="#005BB5", fg="white", font=("Arial", 12)).pack(pady=20)
 
-# Запуск основного цикла
 login_window.mainloop()
